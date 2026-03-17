@@ -20,7 +20,7 @@ for decryption:
 
 ## Acknowledgments
 
-Authors would like to thank to Ștefan Arseni, Phd for their guidance, insightful feedback, and encouragement throughout this project.
+Authors would like to thank Ștefan Arseni, Phd for their guidance, insightful feedback, and encouragement throughout this project.
 
 ## Authors
 + Moraru Andra

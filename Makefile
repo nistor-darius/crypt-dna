@@ -1,7 +1,7 @@
 .PHONY: clean all
 
 CXX := g++
-CXXFLAGS := -Wall -Wextra -g
+CXXFLAGS := -Wall -Wextra -g 
 TARGET := bin/crypt-dna
 SRC := $(wildcard src/*.cpp)
 OBJ := $(SRC:.cpp=.o)

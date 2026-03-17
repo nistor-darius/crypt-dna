@@ -1,5 +1,6 @@
 #pragma once
-
+#include <memory>
+#include "../include/CryptoEngine.hpp"
 
 /*
 * Singleton class that orchestrates the whole program
@@ -20,11 +21,13 @@ namespace crypto {
 
         void initialize(int argc, char** argv);
 
+        void run();
+
     private:
-        App() {}
-        void printUsage();
+        App() : m_cryptEngine(std::make_unique<CryptoEngine>()) {}
+        void printUsage(char* name);
         // members
-        
+        std::unique_ptr<CryptoEngine> m_cryptEngine;
         
 
     };
