@@ -26,7 +26,7 @@ namespace crypto {
         std::unique_ptr<CryptoEngine> m_cryptEngine;
         std::vector<unsigned char> inputData;
 
-
+        unsigned char* m_salt;
 
     };
 }
