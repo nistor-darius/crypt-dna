@@ -1,11 +1,7 @@
 #pragma once
 #include <memory>
+#include <vector>
 #include "../include/CryptoEngine.hpp"
-
-/*
-* Singleton class that orchestrates the whole program
-* inspiration: StackOverflow
-*/
 
 namespace crypto {
     class App
@@ -28,7 +24,9 @@ namespace crypto {
         void printUsage(char* name);
         // members
         std::unique_ptr<CryptoEngine> m_cryptEngine;
-        
+        std::vector<unsigned char> inputData;
+
+
 
     };
 }

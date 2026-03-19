@@ -4,26 +4,42 @@
 #include <iostream>
 #include <cstring>
 #include <new>
+#include <openssl/evp.h>
+#include <openssl/aes.h>
 
-int crypto::CryptoEngine::encryptData(unsigned char **plaintext, size_t &data_len, unsigned char *iv, unsigned char **key, unsigned char **ciphertext)
+int crypto::CryptoEngine::encryptData(unsigned char **plaintext, int &plaintext_len, unsigned char *iv, unsigned char **key, unsigned char **ciphertext, int& ciphertext_len)
 {
-    size_t offset = 0;
-    printf("Data_len before padding: %d\n", data_len);
-    addPadding(plaintext, data_len, DNA_BLOCK_SIZE);
-    printf("Data_len after padding: %d\n", data_len);
-    printHex(*plaintext, data_len);
-    unsigned char* encodedData;
-    encodeData(*plaintext, data_len, &encodedData);
+    int status = STATUS_SUCCESS;
+    int ciphertext_len_update;
+    ciphertext_len = plaintext_len + AES_BLOCK_SIZE;
+    *ciphertext = new unsigned char[ciphertext_len];
+    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
 
-    
+    status = EVP_EncryptInit_ex(ctx, EVP_aes_128_ctr(), NULL, *key, iv);
+    if(status != STATUS_SUCCESS)
+        return ERR_CRYPT;
 
-    printf("%s\n", encodedData);
-    delete[] encodedData;
+    status = EVP_EncryptUpdate(ctx, *ciphertext, &ciphertext_len, *plaintext, plaintext_len);
+    if(status != STATUS_SUCCESS)
+        return ERR_CRYPT;
 
-    return 0;
+    status = EVP_EncryptFinal_ex(ctx, *ciphertext + ciphertext_len, &ciphertext_len_update);
+    if(status != STATUS_SUCCESS)
+        return ERR_CRYPT;
+
+    ciphertext_len += ciphertext_len_update;
+
+    EVP_CIPHER_CTX_free(ctx);
+
+    unsigned char* encodedData = new unsigned char[ciphertext_len];
+    encodeData(*ciphertext, ciphertext_len, &encodedData);
+
+    printf("%s", encodedData);
+
+    return STATUS_SUCCESS;
 }
 
-int crypto::CryptoEngine::encodeData(unsigned char *data, size_t& data_len, unsigned char **encodedData)
+int crypto::CryptoEngine::encodeData(unsigned char *data, int& data_len, unsigned char **encodedData)
 {
     *encodedData = new unsigned char[data_len * 4 + 1];
     for(size_t i = 0,  j = 0; i < data_len; i++, j += 4)
@@ -35,51 +51,13 @@ int crypto::CryptoEngine::encodeData(unsigned char *data, size_t& data_len, unsi
     }
     data_len *= 4;
     (*encodedData)[data_len] = '\0';
-    return 0;
+    return STATUS_SUCCESS;
 }
 
-int crypto::CryptoEngine::addPadding(unsigned char** data, size_t &data_len, size_t block_size)
+int crypto::CryptoEngine::generateKey(unsigned char *passphrase, int passphrase_len, unsigned char **key, int key_len)
 {
-    size_t pad_num = block_size - (data_len % block_size);
-
-    if(pad_num == 0)
-    {
-        data_len += block_size;
-        unsigned char* temp = new unsigned char[data_len];
-        if(temp == nullptr)
-            throw new std::bad_alloc();
-
-        memcpy(temp, *data, data_len - block_size);
-
-        delete[] *data;
-        *data = temp;
-
-        for(size_t i = 1 ; i < block_size; i++)
-        {
-            (*data)[data_len - i] = block_size;
-        }
-    }
-    else 
-    {
-        data_len += pad_num;
-        unsigned char* temp = new unsigned char[data_len];
-        if(temp == nullptr)
-            throw new std::bad_alloc();
-
-        memcpy(temp, *data, data_len - pad_num);
-
-        delete[] *data;
-        *data = temp;
-
-        for(size_t i = 1 ; i <= pad_num; i++)
-        {
-            (*data)[data_len - i] = pad_num;
-        }
-    }
-
     return 0;
 }
-
 unsigned char crypto::CryptoEngine::mapValue(unsigned char two_bit_value, int scheme_choice)
 {
     if(two_bit_value == 0x00)
