@@ -1,7 +1,7 @@
 /*
 *   DNA-Encryption tool
 *   Authors: Moraru Andra and Nistor Darius
-*   version 0.0.1
+*   version 0.0.2
 */
 #include <iostream>
 #include <memory>
@@ -14,10 +14,6 @@ int main(int argc, char** argv)
         crypto::App::getInstance().initialize(argc, argv);
         crypto::App::getInstance().run();
     }
-    catch(const std::invalid_argument&)
-    {
-        return 1;
-    }
     catch(const std::exception& e)
     {
         std::cerr << e.what() << '\n';
@@ -25,7 +21,6 @@ int main(int argc, char** argv)
     }
     catch(...)
     {
-        std::cerr << "An unknown error occurred." << std::endl;
         return 1;
     }
     

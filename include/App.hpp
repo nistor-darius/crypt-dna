@@ -17,15 +17,18 @@ namespace crypto {
         void initialize(int argc, char** argv);
 
         void run();
-
     private:
         App() : m_cryptEngine(std::make_unique<CryptoEngine>()) {}
-        void printUsage(char* name);
+
+        void readData(std::vector<unsigned char>& data);
+
         // members
         std::unique_ptr<CryptoEngine> m_cryptEngine;
         std::vector<unsigned char> inputData;
 
-        unsigned char* m_salt;
-
+        std::string m_inputFile;
+        std::string m_outputFile;
+        std::string m_password;
+        bool m_encyption;
     };
 }

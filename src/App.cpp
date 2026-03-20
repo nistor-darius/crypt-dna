@@ -1,18 +1,36 @@
 #include <iostream>
 #include <exception>
 #include <cstring>
+#include <string>
+#include <fstream>
 #include "../include/App.hpp"
 #include "../include/utils.hpp"
+#include "../include/cxxopts.hpp"
 
 void crypto::App::initialize(int argc, char **argv)
 {
-    if (argc < 6)
+    cxxopts::Options options("crypt-dna", 
+        "crypt-dna\tLightweight pseudo-DNA encryption utilitary");
+
+    options.add_options()
+        ("d,decrypt", "Decrypt data")
+        ("in,infile", "File to perform operation", cxxopts::value<std::string>())
+        ("out,outfile", "Output file", cxxopts::value<std::string>()->default_value("stdout"))
+        ("h,help", "Print this help page", cxxopts::value<bool>()->default_value("false"))
+        ("p,password", "Specified the password used for encryption/decryption", cxxopts::value<std::string>())
+        ; 
+    auto result = options.parse(argc, argv);
+
+    if(result.count("help"))
     {
-        printUsage(argv[0]);
-        throw new std::invalid_argument("Invalid usage!\n");
+        std::cout << options.help() << std::endl;
+        throw new cxxopts::exceptions::exception("Invalid usage");
     }
 
-    
+    m_inputFile = result["infile"].as<std::string>();
+    m_encyption = result["decrypt"].as<bool>();
+    m_outputFile = result["outfile"].as<std::string>();
+    m_password = result["password"].as<std::string>();
 }
 
 crypto::App &crypto::App::getInstance()
@@ -23,25 +41,33 @@ crypto::App &crypto::App::getInstance()
 
 void crypto::App::run()
 {
-    unsigned char* data = new unsigned char[101];
-    scanf("%s", data);
-    int data_len = strlen((const char*)data);
+    std::vector<unsigned char> read_buffer;
+    readData(read_buffer);
 
-    const char* password = "cryptography";
-    
-    unsigned char* ciphertext = NULL;
-    int ciphertext_len;
+    std::cout.write(reinterpret_cast<char*>(read_buffer.data()), read_buffer.size());
 
-    m_cryptEngine->encryptData(data, data_len, password, &ciphertext, ciphertext_len);
+    std::cout << std::endl;
+    std::vector<unsigned char> ciphertext;
 
-    printHex(ciphertext, ciphertext_len);
+    m_cryptEngine->encryptData(read_buffer, m_password, ciphertext);
 
+    printHex(ciphertext.data(), ciphertext.size());
 }
 
-
-void crypto::App::printUsage(char* name)
+void crypto::App::readData(std::vector<unsigned char> &buffer)
 {
-    std::cout << "USAGE:\n"
-        << name <<"  enc -in <INPUT_FILE> -out <OUTPUT_FILE>\n"
-        << name <<"  dec -in <ENCRYPTED_FILE> -out <DECRYPTED_FILE>\n";  
+    buffer.clear();
+    std::ifstream file(m_inputFile, std::ios::binary | std::ios::ate);
+    if(!file.is_open())
+        throw new std::runtime_error("Unable to open the file for reading.");
+
+    size_t size = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    buffer.resize(size);
+
+    if(!file.read(reinterpret_cast<char*>(buffer.data()), size)) 
+    {
+        throw new std::runtime_error("Couldn't read from the specified file.");
+    }
 }
