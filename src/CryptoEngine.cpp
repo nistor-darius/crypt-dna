@@ -1,6 +1,3 @@
-#include "../include/CryptoEngine.hpp"
-#include "../include/utils.hpp"
-#include "../include/CipherBundle.hpp"
 #include <exception>
 #include <iostream>
 #include <cstring>
@@ -8,6 +5,9 @@
 #include <openssl/evp.h>
 #include <openssl/aes.h>
 #include <openssl/rand.h>
+#include "../include/CryptoEngine.hpp"
+#include "../include/utils.hpp"
+#include "../include/CipherBundle.hpp"
 
 int crypto::CryptoEngine::encryptData(unsigned char* plaintext, int &plaintext_len, const char* password, unsigned char **ciphertext, int& ciphertext_len)
 {
@@ -37,7 +37,22 @@ int crypto::CryptoEngine::encryptData(unsigned char* plaintext, int &plaintext_l
         throw new std::bad_alloc();
 
     _encodeData(cryptoInfo.ciphertext, cryptoInfo.ciphertext_len, &encodedData);
-    printf("Final ciphertext: %s\n", encodedData);
+    
+    ciphertext_len = _SALT_LENGTH + _IV_LENGTH + cryptoInfo.ciphertext_len;
+    *ciphertext = new unsigned char[ciphertext_len];
+    if(*ciphertext == NULL)
+        throw new std::bad_alloc();
+
+    memcpy(*ciphertext, cryptoInfo.salt, _SALT_LENGTH);
+    memcpy((*ciphertext) + _SALT_LENGTH, cryptoInfo.iv, _IV_LENGTH);
+    memcpy((*ciphertext) + _SALT_LENGTH + _IV_LENGTH, encodedData, cryptoInfo.ciphertext_len);
+
+    printf("Intermediary encoded data: %s\n", encodedData);
+
+    delete[] cryptoInfo.salt;
+    delete[] cryptoInfo.iv;
+    delete[] encodedData;
+    delete[] cryptoInfo.ciphertext;
 
     return STATUS_SUCCESS;
 }
@@ -63,7 +78,8 @@ int crypto::CryptoEngine::generateKey(const char *passphrase, int passphrase_len
     if(*salt == NULL)
         throw new std::bad_alloc();
 
-    RAND_bytes(*salt, sizeof(salt));
+    if(RAND_bytes(*salt, sizeof(salt)) != STATUS_SUCCESS)
+        throw new std::runtime_error("Couldn't generate random bytes.");
 
     *key = new unsigned char[_KEY_LENGTH];
     if(*key == NULL)

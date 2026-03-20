@@ -4,16 +4,15 @@
 #include "../include/CryptoEngine.hpp"
 
 namespace crypto {
+    /*
+    Singleton class that orchestrates the whole application logic.
+    */
     class App
     {
     public:
         App(App const&) = delete;
         void operator=(App const&) = delete;
-        static App& getInstance()
-        {
-            static App instance;
-            return instance;
-        }
+        static App& getInstance();
 
         void initialize(int argc, char** argv);
 

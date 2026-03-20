@@ -1,9 +1,8 @@
-#include "../include/App.hpp"
-#include "../include/utils.hpp"
 #include <iostream>
 #include <exception>
 #include <cstring>
-
+#include "../include/App.hpp"
+#include "../include/utils.hpp"
 
 void crypto::App::initialize(int argc, char **argv)
 {
@@ -14,6 +13,12 @@ void crypto::App::initialize(int argc, char **argv)
     }
 
     
+}
+
+crypto::App &crypto::App::getInstance()
+{
+    static App instance;
+    return instance;
 }
 
 void crypto::App::run()
@@ -29,7 +34,7 @@ void crypto::App::run()
 
     m_cryptEngine->encryptData(data, data_len, password, &ciphertext, ciphertext_len);
 
-    
+    printHex(ciphertext, ciphertext_len);
 
 }
 

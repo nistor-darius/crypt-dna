@@ -8,8 +8,6 @@ namespace crypto {
     public:
         int encryptData(unsigned char* plaintext, int& data_len, const char* password, unsigned char** ciphertext, int& ciphertext_len);
         
-        
-
         int generateKey(const char* passphrase, int passphrase_len, unsigned char** key, int key_len, unsigned char** salt);
     private:
         unsigned char _mapValue(unsigned char two_bit_value, int scheme_choice);
