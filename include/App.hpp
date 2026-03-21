@@ -21,6 +21,8 @@ namespace crypto {
         App() : m_cryptEngine(std::make_unique<CryptoEngine>()) {}
 
         void readData(std::vector<unsigned char>& data);
+        void writeData(const CipherBundle& data);
+        void writeData(const std::vector<unsigned char>& plaintext);
 
         // members
         std::unique_ptr<CryptoEngine> m_cryptEngine;
@@ -30,5 +32,6 @@ namespace crypto {
         std::string m_outputFile;
         std::string m_password;
         bool m_encyption;
+        bool m_verbose;
     };
 }

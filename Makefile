@@ -13,7 +13,6 @@ all: $(TARGET)
 %.o: src/%.cpp
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
-
 $(TARGET): $(OBJ)
 	$(CXX) $^ -o $@  $(OPENSSL_FLAGS)
 
