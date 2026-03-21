@@ -3,6 +3,9 @@
 
 namespace crypto
 {
+    /*
+    *   Structure that holds the encryption data
+    */
     struct CipherBundle
     {
         std::vector<unsigned char> iv;

@@ -47,6 +47,10 @@ void crypto::App::run()
 {
     std::vector<unsigned char> read_buffer;
     readData(read_buffer);
+
+    if(read_buffer.size() == 0)
+        throw std::runtime_error("File size is 0.");
+
     if(m_encyption == false)
     {
         if (m_verbose == true)

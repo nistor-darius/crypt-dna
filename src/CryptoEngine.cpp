@@ -14,6 +14,11 @@ crypto::CryptoEngine::CryptoEngine()
     m_reverseMap['T'] = 0b11;
     m_reverseMap['C'] = 0b01;
     m_reverseMap['G'] = 0b10;
+
+    m_directMap[0b00] = 'A';
+    m_directMap[0b11] = 'T';
+    m_directMap[0b01] = 'C';
+    m_directMap[0b10] = 'G';
 }
 
 int crypto::CryptoEngine::encryptData(std::vector<unsigned char> &plaintext, const std::string &password, CipherBundle &cryptoInfo)
@@ -83,7 +88,9 @@ int crypto::CryptoEngine::_generateIV(std::vector<unsigned char> &iv, int iv_len
 
 int crypto::CryptoEngine::_decodeData(const std::vector<unsigned char> &data, std::vector<unsigned char> &decodedData)
 {
-    decodedData.resize((data.size() - 1) / 4);
+    decodedData.resize(data.size() / 4);
+
+    std::cout << "Initial data: " << data.size() << "\nDecoded data size: " << decodedData.size() << std::endl;
 
     for(size_t i = 0, j = 0; i < data.size() - 1; i += 4, j++)
     {
@@ -98,13 +105,7 @@ int crypto::CryptoEngine::_decodeData(const std::vector<unsigned char> &data, st
 
 unsigned char crypto::CryptoEngine::_mapValue(unsigned char two_bit_value, int scheme_choice)
 {
-    if(two_bit_value == 0b00)
-        return 'A';
-    else if (two_bit_value == 0b01)
-        return 'C';
-    else if (two_bit_value == 0b11)
-        return 'T';
-    return 'G';
+    return m_directMap[two_bit_value];
 }
 
 unsigned char crypto::CryptoEngine::_reverseMapValue(unsigned char nucleotide, int scheme_choice)
@@ -122,15 +123,15 @@ int crypto::CryptoEngine::_performEncryptionAES(const std::vector<unsigned char>
 
     status = EVP_EncryptInit_ex(ctx, EVP_aes_128_ctr(), NULL, key.data(), iv.data());
     if(status != STATUS_SUCCESS)
-        return ERR_CRYPT;
+        throw std::runtime_error("Encryption error.");
 
     status = EVP_EncryptUpdate(ctx, ciphertext.data(), &ciphertext_len, plaintext.data(), plaintext.size());
     if(status != STATUS_SUCCESS)
-        return ERR_CRYPT;
+        throw std::runtime_error("Encryption error.");
 
     status = EVP_EncryptFinal_ex(ctx, ciphertext.data() + ciphertext_len, &ciphertext_len_update);
     if(status != STATUS_SUCCESS)
-        return ERR_CRYPT;
+        throw std::runtime_error("Encryption error.");
 
     ciphertext_len += ciphertext_len_update; // sanity check, for CTR mode padding is not needed
     ciphertext.resize(ciphertext_len);
@@ -150,15 +151,15 @@ int crypto::CryptoEngine::_performDecryptionAES(const std::vector<unsigned char>
 
     status = EVP_DecryptInit_ex(ctx, EVP_aes_128_ctr(), NULL, key.data(), iv.data());
     if(status != STATUS_SUCCESS)
-        return ERR_CRYPT;
+        throw std::runtime_error("Decryption error.");
 
     status = EVP_DecryptUpdate(ctx, plaintext.data(), &plaintext_len, ciphertex.data(), ciphertex.size());
     if(status != STATUS_SUCCESS)
-        return ERR_CRYPT;
+        throw std::runtime_error("Decryption error.");
 
     status = EVP_DecryptFinal(ctx, plaintext.data() + plaintext_len, &plaintext_len_update);
     if(status != STATUS_SUCCESS)
-        return ERR_CRYPT;
+        throw std::runtime_error("Decryption error.");
 
     plaintext_len += plaintext_len_update; // sanity check, for CTR mode padding is not needed
     plaintext.resize(plaintext_len);
@@ -178,8 +179,5 @@ int crypto::CryptoEngine::_encodeData(const std::vector<unsigned char> &data, st
         encodedData[j + 2] = _mapValue((data[i] & 0x0C) >> 2, 1);
         encodedData[j + 3] = _mapValue((data[i] & 0x03) >> 0, 1);
     }
-    encodedData[encodedData.size() - 1] = '\0';
     return STATUS_SUCCESS;
 }
-
-

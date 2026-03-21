@@ -5,7 +5,7 @@
 
 namespace crypto {
     /*
-    Singleton class that orchestrates the whole application logic.
+    *   Singleton class that orchestrates the whole application logic.
     */
     class App
     {
