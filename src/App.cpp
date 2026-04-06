@@ -24,6 +24,12 @@ void crypto::App::initialize(int argc, char **argv)
         ;
     auto result = options.parse(argc, argv);
 
+    if (argc < 2)
+    {
+        std::cout << options.help() << std::endl;
+        exit(EXIT_SUCCESS);
+    }
+
     if(result.count("help"))
     {
         std::cout << options.help() << std::endl;
