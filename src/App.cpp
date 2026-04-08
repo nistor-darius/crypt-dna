@@ -52,7 +52,7 @@ crypto::App &crypto::App::getInstance()
 void crypto::App::run()
 {
     std::vector<unsigned char> read_buffer;
-    readData(read_buffer);
+    _readData(read_buffer);
 
     if(read_buffer.size() == 0)
         throw std::runtime_error("File size is 0.");
@@ -73,7 +73,7 @@ void crypto::App::run()
             std::cout << "Hexadecimal representation" << std::endl;
             printHex(cipherData.ciphertext.data(), cipherData.ciphertext.size());
         }
-        writeData(cipherData);
+        _writeData(cipherData);
     }
     else
     {
@@ -94,10 +94,10 @@ void crypto::App::run()
             cipherData.salt.begin());
 
         std::copy(read_buffer.begin() + _SALT_LENGTH, 
-            read_buffer.begin() + _SALT_LENGTH + _KEY_LENGTH, 
+            read_buffer.begin() + _SALT_LENGTH + _IV_LENGTH, 
             cipherData.iv.begin());
         
-        std::copy(read_buffer.begin() + _SALT_LENGTH + _KEY_LENGTH, 
+        std::copy(read_buffer.begin() + _SALT_LENGTH + _IV_LENGTH, 
             read_buffer.end(), 
             cipherData.ciphertext.begin());
 
@@ -110,11 +110,11 @@ void crypto::App::run()
             printHex(plaintext.data(), plaintext.size());
         }
 
-        writeData(plaintext);
+        _writeData(plaintext);
     }
 }
 
-void crypto::App::readData(std::vector<unsigned char> &buffer)
+void crypto::App::_readData(std::vector<unsigned char> &buffer)
 {
     buffer.clear();
     std::ifstream file(m_inputFile, std::ios::binary | std::ios::ate);
@@ -133,7 +133,7 @@ void crypto::App::readData(std::vector<unsigned char> &buffer)
     file.close();
 }
 
-void crypto::App::writeData(const CipherBundle &data)
+void crypto::App::_writeData(const CipherBundle &data)
 {
     
     std::ofstream out(m_outputFile, std::ios::binary);
@@ -147,7 +147,7 @@ void crypto::App::writeData(const CipherBundle &data)
 
     out.close();
 }
-void crypto::App::writeData(const std::vector<unsigned char> &plaintext)
+void crypto::App::_writeData(const std::vector<unsigned char> &plaintext)
 {
     if(m_outputFile == "stdout")
     {

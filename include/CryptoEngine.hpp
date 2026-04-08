@@ -25,17 +25,21 @@ namespace crypto {
 
         int _performDecryptionAES(const std::vector<unsigned char>& ciphertex, const std::vector<unsigned char>& iv, const std::vector<unsigned char>& key, std::vector<unsigned char>& plaintext);
 
-        int _encodeData(const std::vector<unsigned char>& data, std::vector<unsigned char>& encodedData);
+        int _encodeData(const std::vector<unsigned char> &data, std::vector<unsigned char> &encodedData, std::vector<unsigned char>& dynamicKey);
 
         int _generateKey(const std::string& password, std::vector<unsigned char>& key, int key_len, const std::vector<unsigned char>& salt);
+
+        int _getRandomScheme(int* current_values, unsigned char* buffer);
 
         int _generateSalt(std::vector<unsigned char>& salt, int salt_len);
 
         int _generateIV(std::vector<unsigned char>& iv, int iv_len);
 
-        int _decodeData(const std::vector<unsigned char>& data, std::vector<unsigned char>& decodedData);
+        int _decodeData(const std::vector<unsigned char>& data, std::vector<unsigned char>& decodedData, std::vector<unsigned char>& dynamicKey);
 
-        std::unordered_map<unsigned char, unsigned char> m_reverseMap;
-        std::unordered_map<unsigned char, unsigned char> m_directMap;
+        int _generateAES_DPRB(std::vector<unsigned char>& random_buffer, std::vector<unsigned char>& ke, int output_len);
+
+        std::vector<std::unordered_map<unsigned char, unsigned char>> m_reverseMap;
+        std::vector<std::unordered_map<unsigned char, unsigned char>> m_directMap;
     };
 }

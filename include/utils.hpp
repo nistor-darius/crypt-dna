@@ -3,7 +3,7 @@
 #include <cstddef>
 
 // cryptographic sizes in bytes
-#define _KEY_LENGTH         16
+#define _KEY_LENGTH         32
 #define _SALT_LENGTH        16
 #define _IV_LENGTH          16
 #define _PBKDF2_ITER        100000

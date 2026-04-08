@@ -20,9 +20,9 @@ namespace crypto {
     private:
         App() : m_cryptEngine(std::make_unique<CryptoEngine>()) {}
 
-        void readData(std::vector<unsigned char>& data);
-        void writeData(const CipherBundle& data);
-        void writeData(const std::vector<unsigned char>& plaintext);
+        void _readData(std::vector<unsigned char>& data);
+        void _writeData(const CipherBundle& data);
+        void _writeData(const std::vector<unsigned char>& plaintext);
 
         // members
         std::unique_ptr<CryptoEngine> m_cryptEngine;
