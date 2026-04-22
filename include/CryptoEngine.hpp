@@ -25,7 +25,7 @@ namespace crypto {
 
         int _performDecryptionAES(const std::vector<unsigned char>& ciphertex, const std::vector<unsigned char>& iv, const std::vector<unsigned char>& key, std::vector<unsigned char>& plaintext);
 
-        int _encodeData(const std::vector<unsigned char> &data, std::vector<unsigned char> &encodedData, std::vector<unsigned char>& dynamicKey);
+        int _encodeData(const std::vector<unsigned char> &data, std::vector<unsigned char> &encodedData, std::vector<unsigned char>& dynamicKey, std::vector<unsigned char>& iv);
 
         int _generateKey(const std::string& password, std::vector<unsigned char>& key, int key_len, const std::vector<unsigned char>& salt);
 
@@ -35,7 +35,7 @@ namespace crypto {
 
         int _generateIV(std::vector<unsigned char>& iv, int iv_len);
 
-        int _decodeData(const std::vector<unsigned char>& data, std::vector<unsigned char>& decodedData, std::vector<unsigned char>& dynamicKey);
+        int _decodeData(const std::vector<unsigned char>& data, std::vector<unsigned char>& decodedData, std::vector<unsigned char>& dynamicKey, std::vector<unsigned char>& iv);
 
         int _generateAES_DPRB(std::vector<unsigned char>& random_buffer, std::vector<unsigned char>& ke, int output_len);
 

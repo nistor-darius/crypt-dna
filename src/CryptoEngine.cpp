@@ -126,12 +126,11 @@ int crypto::CryptoEngine::encryptData(std::vector<unsigned char> &plaintext, con
     _performEncryptionAES(plaintext, cryptoInfo.iv, aes_key, cryptoInfo.ciphertext);
     aes_key.clear();
 
-
     std::vector<unsigned char> encodedData;
 
     dynamic_key.assign(key.begin() + 16, key.end());
 
-    _encodeData(cryptoInfo.ciphertext, encodedData, dynamic_key);
+    _encodeData(cryptoInfo.ciphertext, encodedData, dynamic_key, cryptoInfo.iv);
     key.clear();
 
     cryptoInfo.ciphertext.clear();
@@ -150,7 +149,7 @@ int crypto::CryptoEngine::decryptData(std::vector<unsigned char> &plaintext, con
     
     dynamic_key.assign(key.begin() + 16, key.end());
     std::vector<unsigned char> decodedData;
-    _decodeData(cryptoInfo.ciphertext, decodedData, dynamic_key);
+    _decodeData(cryptoInfo.ciphertext, decodedData, dynamic_key,cryptoInfo.iv);
     dynamic_key.clear();
 
     aes_key.assign(key.begin(), key.begin() + 16);
@@ -276,45 +275,102 @@ int crypto::CryptoEngine::_performDecryptionAES(const std::vector<unsigned char>
     return STATUS_SUCCESS;
 }
 
-int crypto::CryptoEngine::_encodeData(const std::vector<unsigned char> &data, std::vector<unsigned char> &encodedData, std::vector<unsigned char>& dynamicKey)
+int crypto::CryptoEngine::_encodeData(const std::vector<unsigned char> &data, std::vector<unsigned char> &encodedData, std::vector<unsigned char>& dynamicKey, std::vector<unsigned char>& iv)
 {
+    int status = STATUS_SUCCESS;
     encodedData.resize(data.size() * 4 + 1);
+
+    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+
+    status = EVP_EncryptInit_ex(ctx, EVP_aes_128_ctr(), NULL, dynamicKey.data(), iv.data());
+    if (status != STATUS_SUCCESS)
+    {
+        EVP_CIPHER_CTX_free(ctx);
+        throw std::runtime_error("Couldn't init the PRBG stream!");   
+    }
+
 
     int current_values[4] = {0, 0, 0, 0};
     std::vector<unsigned char> random_buffer;
+    random_buffer.resize(AES_BLOCK_SIZE);
+    std::vector<unsigned char> zero_data(AES_BLOCK_SIZE, 0);
     unsigned char slice_random_buffer[2];
-    _generateAES_DPRB(random_buffer, dynamicKey, 2 * data.size());
-    for(size_t i = 0,  j = 0, t = 0; i < data.size(); i++, j += 4, t += 2)
+    int out_len = 0;
+
+    int keyposition = 0;
+    for(size_t i = 0,  j = 0; i < data.size(); i++, j += 4)
     {        
-        memcpy(slice_random_buffer, random_buffer.data() + t, 2);
+        if (keyposition == 16)
+        {
+            status = EVP_EncryptUpdate(ctx, random_buffer.data(), &out_len, zero_data.data(), AES_BLOCK_SIZE);
+            if (status != STATUS_SUCCESS)
+            {
+                EVP_CIPHER_CTX_free(ctx);
+                throw std::runtime_error("Internal PRBG error!");
+            }
+            keyposition = 0;
+        }
+        memcpy(slice_random_buffer, random_buffer.data() + keyposition, 2);
+        keyposition += 2;
         _getRandomScheme(current_values, slice_random_buffer);
-        encodedData[j] = _mapValue((data[i] & 0xC0) >> 6, current_values[0]);
-        encodedData[j + 1] = _mapValue((data[i] & 0x30) >> 4, current_values[1]);
-        encodedData[j + 2] = _mapValue((data[i] & 0x0C) >> 2, current_values[2]);
-        encodedData[j + 3] = _mapValue((data[i] & 0x03) >> 0, current_values[3]);
+        encodedData[j]      = _mapValue((data[i] & 0xC0) >> 6, current_values[0]);
+        encodedData[j + 1]  = _mapValue((data[i] & 0x30) >> 4, current_values[1]);
+        encodedData[j + 2]  = _mapValue((data[i] & 0x0C) >> 2, current_values[2]);
+        encodedData[j + 3]  = _mapValue((data[i] & 0x03) >> 0, current_values[3]);
     }
+
+    EVP_CIPHER_CTX_free(ctx);
+
     return STATUS_SUCCESS;
 }
 
-int crypto::CryptoEngine::_decodeData(const std::vector<unsigned char> &data, std::vector<unsigned char> &decodedData, std::vector<unsigned char>& dynamicKey)
+int crypto::CryptoEngine::_decodeData(const std::vector<unsigned char> &data, std::vector<unsigned char> &decodedData, std::vector<unsigned char>& dynamicKey, std::vector<unsigned char>& iv)
 {
+    int status = STATUS_SUCCESS;
     decodedData.resize(data.size() / 4);
 
-    RAND_seed(dynamicKey.data(), dynamicKey.size());
+    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+
+    status = EVP_EncryptInit_ex(ctx, EVP_aes_128_ctr(), NULL, dynamicKey.data(), iv.data());
+    if (status != STATUS_SUCCESS)
+    {
+        EVP_CIPHER_CTX_free(ctx);
+        throw std::runtime_error("Couldn't init the PRBG stream!");   
+    }
 
     int current_values[4] = {0, 0, 0, 0};
     std::vector<unsigned char> random_buffer;
+    random_buffer.resize(AES_BLOCK_SIZE);
+    std::vector<unsigned char> zero_data(AES_BLOCK_SIZE, 0);
     unsigned char slice_random_buffer[2];
-    _generateAES_DPRB(random_buffer, dynamicKey, data.size() / 2);
-    for(size_t i = 0, j = 0, t = 0; i < data.size() - 1; i += 4, j++, t += 2)
+    int out_len = 0;
+
+    int keyposition = 0;
+
+    for(size_t i = 0, j = 0; i < data.size() - 1; i += 4, j++)
     {
-        memcpy(slice_random_buffer, random_buffer.data() + t, 2);
+        if (keyposition == 16)
+        {
+            status = EVP_EncryptUpdate(ctx, random_buffer.data(), &out_len, zero_data.data(), AES_BLOCK_SIZE);
+            if (status != STATUS_SUCCESS)
+            {
+                EVP_CIPHER_CTX_free(ctx);
+                throw std::runtime_error("Internal PRBG error!");
+            }
+            keyposition = 0;
+        }
+
+        memcpy(slice_random_buffer, random_buffer.data() + keyposition, 2);
+        keyposition += 2;
         _getRandomScheme(current_values, slice_random_buffer);
+
         decodedData[j] = (_reverseMapValue(data[i], current_values[0]) << 6) | 
-        (_reverseMapValue(data[i + 1], current_values[1]) << 4) | 
-        (_reverseMapValue(data[i + 2], current_values[2]) << 2) | 
-        (_reverseMapValue(data[i + 3], current_values[3]) << 0);
+            (_reverseMapValue(data[i + 1], current_values[1]) << 4) | 
+            (_reverseMapValue(data[i + 2], current_values[2]) << 2) | 
+            (_reverseMapValue(data[i + 3], current_values[3]) << 0);
     }
+
+    EVP_CIPHER_CTX_free(ctx);
 
     return STATUS_SUCCESS;
 }
