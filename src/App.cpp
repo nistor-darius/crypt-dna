@@ -59,58 +59,11 @@ void crypto::App::run()
 
     if(m_encyption == false)
     {
-        if (m_verbose == true)
-        {
-            std::cout.write(reinterpret_cast<char*>(read_buffer.data()), read_buffer.size());
-            std::cout << std::endl;
-        }
-        CipherBundle cipherData;
-
-        m_cryptEngine->encryptData(read_buffer, m_password, cipherData);
-
-        if (m_verbose == true)
-        {
-            std::cout << "Hexadecimal representation" << std::endl;
-            printHex(cipherData.ciphertext.data(), cipherData.ciphertext.size());
-        }
-        _writeData(cipherData);
+        _handleEncryption(read_buffer);
     }
     else
     {
-        if (m_verbose == true)
-        {    
-            std::cout.write(reinterpret_cast<char*>(read_buffer.data()), read_buffer.size());
-            std::cout << std::endl;
-        }
-
-        CipherBundle cipherData;
-
-        cipherData.salt.resize(_SALT_LENGTH);
-        cipherData.iv.resize(_IV_LENGTH);
-        cipherData.ciphertext.resize(read_buffer.size() - _SALT_LENGTH - _IV_LENGTH);
-
-        std::copy(read_buffer.begin(), 
-            read_buffer.begin() + _SALT_LENGTH , 
-            cipherData.salt.begin());
-
-        std::copy(read_buffer.begin() + _SALT_LENGTH, 
-            read_buffer.begin() + _SALT_LENGTH + _IV_LENGTH, 
-            cipherData.iv.begin());
-        
-        std::copy(read_buffer.begin() + _SALT_LENGTH + _IV_LENGTH, 
-            read_buffer.end(), 
-            cipherData.ciphertext.begin());
-
-        std::vector<unsigned char> plaintext;
-        m_cryptEngine->decryptData(plaintext, m_password, cipherData);
-
-        if(m_verbose == true)
-        {
-            std::cout << "Hexadecimal representation" << std::endl;
-            printHex(plaintext.data(), plaintext.size());
-        }
-
-        _writeData(plaintext);
+        _handleDecryption(read_buffer);
     }
 }
 
@@ -163,4 +116,61 @@ void crypto::App::_writeData(const std::vector<unsigned char> &plaintext)
     out.write(reinterpret_cast<const char*>(plaintext.data()), plaintext.size());
 
     out.close();
+
+}
+void crypto::App::_handleEncryption(std::vector<unsigned char> &read_buffer)
+{
+    if (m_verbose == true)
+    {
+        std::cout.write(reinterpret_cast<char*>(read_buffer.data()), read_buffer.size());
+        std::cout << std::endl;
+    }
+    CipherBundle cipherData;
+
+    m_cryptEngine->encryptData(read_buffer, m_password, cipherData);
+
+    if (m_verbose == true)
+    {
+        std::cout << "Hexadecimal representation" << std::endl;
+        printHex(cipherData.ciphertext.data(), cipherData.ciphertext.size());
+    }
+    _writeData(cipherData);
+}
+
+void crypto::App::_handleDecryption(std::vector<unsigned char> &read_buffer)
+{
+    if (m_verbose == true)
+    {    
+        std::cout.write(reinterpret_cast<char*>(read_buffer.data()), read_buffer.size());
+        std::cout << std::endl;
+    }
+
+    CipherBundle cipherData;
+
+    cipherData.salt.resize(_SALT_LENGTH);
+    cipherData.iv.resize(_IV_LENGTH);
+    cipherData.ciphertext.resize(read_buffer.size() - _SALT_LENGTH - _IV_LENGTH);
+
+    std::copy(read_buffer.begin(), 
+        read_buffer.begin() + _SALT_LENGTH , 
+        cipherData.salt.begin());
+
+    std::copy(read_buffer.begin() + _SALT_LENGTH, 
+        read_buffer.begin() + _SALT_LENGTH + _IV_LENGTH, 
+        cipherData.iv.begin());
+    
+    std::copy(read_buffer.begin() + _SALT_LENGTH + _IV_LENGTH, 
+        read_buffer.end(), 
+        cipherData.ciphertext.begin());
+
+    std::vector<unsigned char> plaintext;
+    m_cryptEngine->decryptData(plaintext, m_password, cipherData);
+
+    if(m_verbose == true)
+    {
+        std::cout << "Hexadecimal representation" << std::endl;
+        printHex(plaintext.data(), plaintext.size());
+    }
+
+    _writeData(plaintext);
 }

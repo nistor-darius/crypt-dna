@@ -24,6 +24,10 @@ namespace crypto {
         void _writeData(const CipherBundle& data);
         void _writeData(const std::vector<unsigned char>& plaintext);
 
+
+        void _handleEncryption(std::vector<unsigned char>& readData);
+        void _handleDecryption(std::vector<unsigned char>& readData);
+
         // members
         std::unique_ptr<CryptoEngine> m_cryptEngine;
         std::vector<unsigned char> inputData;

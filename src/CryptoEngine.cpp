@@ -201,8 +201,6 @@ int crypto::CryptoEngine::_generateIV(std::vector<unsigned char> &iv, int iv_len
     return STATUS_SUCCESS;
 }
 
-
-
 int crypto::CryptoEngine::_generateAES_DPRB(std::vector<unsigned char> &random_buffer, std::vector<unsigned char> &key, int output_len)
 {
     std::vector<unsigned char> zeros_input(output_len, 0);
