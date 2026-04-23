@@ -289,7 +289,6 @@ int crypto::CryptoEngine::_encodeData(const std::vector<unsigned char> &data, st
         throw std::runtime_error("Couldn't init the PRBG stream!");   
     }
 
-
     int current_values[4] = {0, 0, 0, 0};
     std::vector<unsigned char> random_buffer;
     random_buffer.resize(AES_BLOCK_SIZE);

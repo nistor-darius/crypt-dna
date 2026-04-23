@@ -22,10 +22,13 @@ clone this repository locally
 ## Usage
 
 for encryption:  
-`crypt-dna enc -in [INPUT_FILE] -out [OUTPUT_FILE] -p [PASSWORD]`
+`./bin/crypt-dna -i [INPUT_FILE] -o [OUTPUT_FILE] -p [PASSWORD]`
 
 for decryption:  
-`crypt-dna dec -in [ENCRYPTED_FILE] -out [DECRYPTED_FILE] -p [PASSWORD]`
+`./bin/crypt-dna -d -i [ENCRYPTED_FILE] -o [DECRYPTED_FILE] -p [PASSWORD]`
+
+for reading an encrypted file:  
+`./bin/crypt-dna -r [ENCRYPTED_FILE]`
 
 ## Acknowledgments
 
