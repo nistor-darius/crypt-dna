@@ -21,6 +21,7 @@ void crypto::App::initialize(int argc, char **argv)
         ("h,help", "Print this help page", cxxopts::value<bool>()->default_value("false"))
         ("p,password", "Specifies the password used for encryption/decryption", cxxopts::value<std::string>())
         ("v,verbose", "Verbose, prints intermediary debug values")
+        ("s,show-dna", "Print the DNA sequence to stdout after encryption", cxxopts::value<bool>()->default_value("false"))
         ;
     auto result = options.parse(argc, argv);
 
@@ -41,6 +42,7 @@ void crypto::App::initialize(int argc, char **argv)
     m_outputFile = result["outfile"].as<std::string>();
     m_password = result["password"].as<std::string>();
     m_verbose = result["verbose"].as<bool>();
+    m_showDna = result["show-dna"].as<bool>();
 }
 
 crypto::App &crypto::App::getInstance()
@@ -135,6 +137,12 @@ void crypto::App::_handleEncryption(std::vector<unsigned char> &read_buffer)
         printHex(cipherData.ciphertext.data(), cipherData.ciphertext.size());
     }
     _writeData(cipherData);
+
+    if (m_showDna)
+    {
+        std::cout.write(reinterpret_cast<const char*>(cipherData.ciphertext.data()),cipherData.ciphertext.size());
+        std::cout << std::endl;
+    }
 }
 
 void crypto::App::_handleDecryption(std::vector<unsigned char> &read_buffer)

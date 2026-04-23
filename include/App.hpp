@@ -37,5 +37,6 @@ namespace crypto {
         std::string m_password;
         bool m_encyption;
         bool m_verbose;
+        bool m_showDna;
     };
 }
