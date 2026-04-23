@@ -38,7 +38,6 @@ namespace crypto {
 
         int _decodeData(const std::vector<unsigned char>& data, std::vector<unsigned char>& decodedData, std::vector<unsigned char>& dynamicKey, std::vector<unsigned char>& iv);
 
-
         std::vector<std::unordered_map<unsigned char, unsigned char>> m_reverseMap;
         std::vector<std::unordered_map<unsigned char, unsigned char>> m_directMap;
     };

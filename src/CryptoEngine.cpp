@@ -202,10 +202,10 @@ int crypto::CryptoEngine::_generateKey(const std::string &password, std::vector<
 
 int crypto::CryptoEngine::_getRandomScheme(int *current_values, unsigned char *buffer)
 {
-    current_values[0] = ( ( buffer[0] & 0x07 ) | ( buffer[0] | 0x08) ) & 0x07;
-    current_values[1] = ( ( ( buffer[0] & 0x70 ) | ( buffer[0] | 0x80) ) >> 4 ) & 0x07;
-    current_values[2] = ( ( buffer[1] & 0x07 ) | ( buffer[1] | 0x08) ) & 0x07;
-    current_values[3] = ( ( ( buffer[1] & 0x70 ) | ( buffer[1] | 0x80) ) >> 4 ) & 0x07;
+    current_values[0] = ( ( buffer[0] & 0x07 ) ^ ( buffer[0] | 0x08) ) & 0x07;
+    current_values[1] = ( ( ( buffer[0] & 0x70 ) ^ ( buffer[0] | 0x80) ) >> 4 ) & 0x07;
+    current_values[2] = ( ( buffer[1] & 0x07 ) ^ ( buffer[1] | 0x08) ) & 0x07;
+    current_values[3] = ( ( ( buffer[1] & 0x70 ) ^ ( buffer[1] | 0x80) ) >> 4 ) & 0x07;
 
     return STATUS_SUCCESS;
 }
