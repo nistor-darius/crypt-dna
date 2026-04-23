@@ -28,7 +28,7 @@ for decryption:
 `./bin/crypt-dna -d -i [ENCRYPTED_FILE] -o [DECRYPTED_FILE] -p [PASSWORD]`
 
 for reading an encrypted file:  
-`./bin/crypt-dna -r [ENCRYPTED_FILE]`
+`./bin/crypt-dna -s [ENCRYPTED_FILE]`
 
 ## Acknowledgments
 

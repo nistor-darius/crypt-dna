@@ -19,7 +19,7 @@ void crypto::App::initialize(int argc, char **argv)
         ("i,infile", "File to perform operation", cxxopts::value<std::string>())
         ("o,outfile", "Output file", cxxopts::value<std::string>()->default_value("stdout"))
         ("h,help", "Print this help page", cxxopts::value<bool>()->default_value("false"))
-        ("p,password", "Specifies the password used for encryption/decryption", cxxopts::value<std::string>())
+        ("p,password", "Specifies the password used for encryption/decryption", cxxopts::value<std::string>()->default_value(""))
         ("v,verbose", "Verbose, prints intermediary debug values")
         ("s,show-dna", "Print the DNA sequence to stdout after encryption", cxxopts::value<bool>()->default_value("false"))
         ;
@@ -37,12 +37,14 @@ void crypto::App::initialize(int argc, char **argv)
         exit(EXIT_SUCCESS);
     }
 
+    
+    m_showDna = result["show-dna"].as<bool>();
     m_inputFile = result["infile"].as<std::string>();
     m_encyption = result["decrypt"].as<bool>();
     m_outputFile = result["outfile"].as<std::string>();
     m_password = result["password"].as<std::string>();
     m_verbose = result["verbose"].as<bool>();
-    m_showDna = result["show-dna"].as<bool>();
+    
 }
 
 crypto::App &crypto::App::getInstance()
@@ -59,6 +61,10 @@ void crypto::App::run()
     if(read_buffer.size() == 0)
         throw std::runtime_error("File size is 0.");
 
+    if(m_showDna == true)
+    {
+        _handleShowDNA(read_buffer);
+    }
     if(m_encyption == false)
     {
         _handleEncryption(read_buffer);
@@ -102,6 +108,7 @@ void crypto::App::_writeData(const CipherBundle &data)
 
     out.close();
 }
+
 void crypto::App::_writeData(const std::vector<unsigned char> &plaintext)
 {
     if(m_outputFile == "stdout")
@@ -137,12 +144,6 @@ void crypto::App::_handleEncryption(std::vector<unsigned char> &read_buffer)
         printHex(cipherData.ciphertext.data(), cipherData.ciphertext.size());
     }
     _writeData(cipherData);
-
-    if (m_showDna)
-    {
-        std::cout.write(reinterpret_cast<const char*>(cipherData.ciphertext.data()),cipherData.ciphertext.size());
-        std::cout << std::endl;
-    }
 }
 
 void crypto::App::_handleDecryption(std::vector<unsigned char> &read_buffer)
@@ -181,4 +182,13 @@ void crypto::App::_handleDecryption(std::vector<unsigned char> &read_buffer)
     }
 
     _writeData(plaintext);
+}
+
+void crypto::App::_handleShowDNA(std::vector<unsigned char> &read_buffer)
+{
+    auto* startPtr = read_buffer.data() + _SALT_LENGTH + _IV_LENGTH;
+    auto size = read_buffer.size() - _SALT_LENGTH - _IV_LENGTH;
+    
+    std::cout.write(reinterpret_cast<const char*>(startPtr), size);
+    std::cout << std::endl;
 }
