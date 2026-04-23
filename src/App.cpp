@@ -22,6 +22,7 @@ void crypto::App::initialize(int argc, char **argv)
         ("p,password", "Specifies the password used for encryption/decryption", cxxopts::value<std::string>()->default_value(""))
         ("v,verbose", "Verbose, prints intermediary debug values")
         ("s,show-dna", "Print the DNA sequence to stdout after encryption", cxxopts::value<bool>()->default_value("false"))
+        ("k,key", "Encryption key file (128 bits size)", cxxopts::value<std::string>()->default_value(""))
         ;
     auto result = options.parse(argc, argv);
 
@@ -37,14 +38,13 @@ void crypto::App::initialize(int argc, char **argv)
         exit(EXIT_SUCCESS);
     }
 
-    
     m_showDna = result["show-dna"].as<bool>();
     m_inputFile = result["infile"].as<std::string>();
     m_encyption = result["decrypt"].as<bool>();
     m_outputFile = result["outfile"].as<std::string>();
     m_password = result["password"].as<std::string>();
     m_verbose = result["verbose"].as<bool>();
-    
+    m_keyFile = result["key"].as<std::string>();
 }
 
 crypto::App &crypto::App::getInstance()
@@ -65,7 +65,7 @@ void crypto::App::run()
     {
         _handleShowDNA(read_buffer);
     }
-    if(m_encyption == false)
+    else if(m_encyption == false)
     {
         _handleEncryption(read_buffer);
     }
@@ -79,6 +79,25 @@ void crypto::App::_readData(std::vector<unsigned char> &buffer)
 {
     buffer.clear();
     std::ifstream file(m_inputFile, std::ios::binary | std::ios::ate);
+    if(!file.is_open())
+        throw std::runtime_error("Unable to open the file for reading.");
+
+    size_t size = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    buffer.resize(size);
+
+    if(!file.read(reinterpret_cast<char*>(buffer.data()), size)) 
+    {
+        throw  std::runtime_error("Couldn't read from the specified file.");
+    }
+    file.close();
+}
+
+void crypto::App::_readData(std::vector<unsigned char> &buffer, const std::string& in_file)
+{
+    buffer.clear();
+    std::ifstream file(in_file, std::ios::binary | std::ios::ate);
     if(!file.is_open())
         throw std::runtime_error("Unable to open the file for reading.");
 
@@ -136,7 +155,21 @@ void crypto::App::_handleEncryption(std::vector<unsigned char> &read_buffer)
     }
     CipherBundle cipherData;
 
-    m_cryptEngine->encryptData(read_buffer, m_password, cipherData);
+    if (m_keyFile == "")
+        m_cryptEngine->encryptData(read_buffer, m_password, cipherData);
+    else
+    {
+        std::vector<unsigned char> key_buffer;
+        _readData(key_buffer, m_keyFile);
+
+        if (key_buffer.size() < 48) {
+            throw std::runtime_error("Key file is too small! Should be 48 bytes.");
+        }
+
+        cipherData.iv.assign(key_buffer.begin(), key_buffer.begin() + 16);
+        std::vector<unsigned char> key(key_buffer.begin() + 16, key_buffer.begin() + 48);
+        m_cryptEngine->encryptData(read_buffer, key, cipherData);
+    }
 
     if (m_verbose == true)
     {

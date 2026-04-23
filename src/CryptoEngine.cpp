@@ -13,7 +13,9 @@ crypto::CryptoEngine::CryptoEngine()
 {
     m_reverseMap.resize(8);
     m_directMap.resize(8);
+
     // RULE 1
+
     m_reverseMap[0]['A'] = 0b00;
     m_reverseMap[0]['C'] = 0b01;
     m_reverseMap[0]['G'] = 0b10;
@@ -25,6 +27,7 @@ crypto::CryptoEngine::CryptoEngine()
     m_directMap[0][0b11] = 'T';
 
     // RULE 2
+
     m_reverseMap[1]['A'] = 0b00;
     m_reverseMap[1]['G'] = 0b01;
     m_reverseMap[1]['C'] = 0b10;
@@ -139,6 +142,34 @@ int crypto::CryptoEngine::encryptData(std::vector<unsigned char> &plaintext, con
     return STATUS_SUCCESS;
 }
 
+int crypto::CryptoEngine::encryptData(std::vector<unsigned char> &plaintext, std::vector<unsigned char> &key, CipherBundle &cryptoInfo)
+{
+    if(key.size() < 32)
+        throw std::runtime_error("Key length is too small! Should be 32 bytes.");
+    
+    std::vector<unsigned char> aes_key;
+    std::vector<unsigned char> dynamic_key;
+
+    cryptoInfo.salt.assign(_SALT_LENGTH, 0);
+    
+    aes_key.assign(key.begin(), key.begin() + 16);
+
+    _performEncryptionAES(plaintext, cryptoInfo.iv, aes_key, cryptoInfo.ciphertext);
+    aes_key.clear();
+
+    std::vector<unsigned char> encodedData;
+
+    dynamic_key.assign(key.begin() + 16, key.end());
+
+    _encodeData(cryptoInfo.ciphertext, encodedData, dynamic_key, cryptoInfo.iv);
+    key.clear();
+
+    cryptoInfo.ciphertext.clear();
+    cryptoInfo.ciphertext = encodedData;
+
+    return STATUS_SUCCESS;
+}
+
 int crypto::CryptoEngine::decryptData(std::vector<unsigned char> &plaintext, const std::string &password, CipherBundle &cryptoInfo)
 {
     std::vector<unsigned char> key;
@@ -196,15 +227,6 @@ int crypto::CryptoEngine::_generateIV(std::vector<unsigned char> &iv, int iv_len
 
     if (STATUS_SUCCESS != RAND_bytes(iv.data(), iv_len))
         throw std::runtime_error("Unable to generate random iv.");
-
-    return STATUS_SUCCESS;
-}
-
-int crypto::CryptoEngine::_generateAES_DPRB(std::vector<unsigned char> &random_buffer, std::vector<unsigned char> &key, int output_len)
-{
-    std::vector<unsigned char> zeros_input(output_len, 0);
-    std::vector<unsigned char> iv_input(_IV_LENGTH, 0);
-    _performEncryptionAES(zeros_input, iv_input, key, random_buffer);   
 
     return STATUS_SUCCESS;
 }

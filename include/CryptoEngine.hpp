@@ -15,6 +15,7 @@ namespace crypto {
     public:
         CryptoEngine();
         int encryptData(std::vector<unsigned char>& plaintext, const std::string& password, CipherBundle &cryptoInfo);
+        int encryptData(std::vector<unsigned char>& plaintext, std::vector<unsigned char>& key, CipherBundle &cryptoInfo);
         int decryptData(std::vector<unsigned char>& plaintext, const std::string& password, CipherBundle &cryptoInfo);
     private:
         unsigned char _mapValue(unsigned char two_bit_value, int scheme_choice);
@@ -37,7 +38,6 @@ namespace crypto {
 
         int _decodeData(const std::vector<unsigned char>& data, std::vector<unsigned char>& decodedData, std::vector<unsigned char>& dynamicKey, std::vector<unsigned char>& iv);
 
-        int _generateAES_DPRB(std::vector<unsigned char>& random_buffer, std::vector<unsigned char>& ke, int output_len);
 
         std::vector<std::unordered_map<unsigned char, unsigned char>> m_reverseMap;
         std::vector<std::unordered_map<unsigned char, unsigned char>> m_directMap;
